@@ -15,6 +15,7 @@
 ## 🙋‍♂️ About Me
 
 안녕하세요! 생체신호와 인공지능을 연구하는 **Chung Sungyeon**입니다.
+
 이 블로그는 주로 의료 AI(Medical AI) 분야의 공부 내용을 정리하고 공유하기 위해 만들었습니다.
 
 * **GitHub:** [@ChungSungyeon](https://github.com/ChungSungyeon)
