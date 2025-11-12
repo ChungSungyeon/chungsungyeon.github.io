@@ -41,7 +41,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.1"
+          ruby-version: "3.2"
           bundler-cache: true # 'bundle install' 자동 실행 및 캐시
 
       # 1.4 Javascript 의존성 설치 및 에셋 빌드
