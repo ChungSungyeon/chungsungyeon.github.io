@@ -1,5 +1,7 @@
 <div align="center">
 
+![favicon](/assets/img/favicons/favicon-96x96.png)
+
 # Senny Studylog
 
 **생체신호 인공지능 연구원**
