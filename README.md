@@ -26,4 +26,3 @@
 
 이 블로그는 [Jekyll](https://jekyllrb.com/)을 기반으로 정적 사이트로 구축되었으며,
 [Chirpy Jekyll Theme](https://github.com/cotes2020/jekyll-theme-chirpy)를 커스터마이징하여 사용하고 있습니다.
-멋진 테마를 만들어준 [Cotes2020](https://github.com/cotes2020)님과 모든 기여자분들께 감사를 표합니다.
