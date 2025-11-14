@@ -16,7 +16,7 @@ timezone: Asia/Seoul
 
 title: Senny Studylog # the main title
 
-tagline: 생체신호 인공지능 연구원 # it will display as the subtitle
+tagline: Biosignal Analysis, Medical AI # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
   Personal blog for studying medical AI by Senny
