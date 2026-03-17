@@ -4,11 +4,7 @@
 
 # Senny Studylog
 
-**생체신호 인공지능 연구원**
-
-개인적인 공부와 연구 내용을 기록하는 공간입니다.
-
-[**Visit the Blog →**](https://chungsungyeon.github.io)
+[**Visit the Blog**](https://chungsungyeon.github.io)
 
 </div>
 
@@ -16,12 +12,14 @@
 
 ## 🙋‍♂️ About Me
 
-안녕하세요! 생체신호와 인공지능을 연구하는 **Chung Sungyeon**입니다.
+안녕하세요! 인공지능을 공부하는 **Chung Sungyeon**입니다.
 
-이 블로그는 주로 의료 AI(Medical AI) 분야의 공부 내용을 정리하고 공유하기 위해 만들었습니다.
+이 블로그는 다양한 도메인에서 사용되는 인공지능 기술의 공부 내용을 정리하고 공유하기 위해 만들었습니다.
 
 * **GitHub:** [@ChungSungyeon](https://github.com/ChungSungyeon)
 * **Email:** `sungyeon.ch8@gmail.com`
+
+<br>
 
 ## 🛠️ About This Repository
 
