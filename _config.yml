@@ -16,10 +16,10 @@ timezone: Asia/Seoul
 
 title: Senny Studylog # the main title
 
-tagline: Biosignal Analysis, Medical AI # it will display as the subtitle
+tagline: Studying LLM & Agent # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
-  Personal blog for studying medical AI by Senny
+  Personal blog for studying data & AI by Senny
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
