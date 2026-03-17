@@ -3,24 +3,29 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-![profile](../assets/img/profile/profile_about.png){: width="30%" height="auto" align="left"}
+<div style="display: flex; gap: 50px; align-items: center; justify-content: center; margin-bottom: 20px;">
 
-<center>
-<span style="font-size:170%;font-weight:bold;">
-<br/>정성연 Chung Sungyeon</span>
-<br/>
-<span>
-📧 sungyeon.ch8@gmail.com <br>
-💗 Español, Drum, Snowboarding
-</span>
-</center>
+  <div style="flex-basis: 20%; text-align: right;">
+    <img src="../assets/img/profile/profile_about.png" style="width: 100%; max-width: 200px; height: auto;">
+  </div>
 
-<br style="clear:both;"/>
-<br/>
+  <div style="flex: 1; text-align: left; display: flex; flex-direction: column; gap: 8px;">
+    <span style="font-size: 180%; font-weight: bold; margin-bottom: 4px;">
+      정성연 Chung Sungyeon
+    </span>
+    <span>
+      📧 sungyeon.ch8@gmail.com
+    </span>
+    <span>
+      💗 Español, Drum, Snowboarding
+    </span>
+  </div>
+
+</div>
 
 <br>
-  
-## 기술 스택
+
+## **🛠&#xFE0F; 기술 스택**
 
 | Category | Tech Stack |
 | --- | --- |
@@ -32,25 +37,25 @@ order: 4
 
 <br>
 
-## 이력
+## **📽&#xFE0F; 이력**
 
 ### 경력 및 학력
-- 2025.08 - 2026.03 | **아산생명과학연구원** (인공지능 연구원) 
-- 2019.03 - 2025.08 | **고려대학교 바이오의공학부**
+- 2025.08 - 2026.03 \| **아산생명과학연구원** (인공지능 연구원) 
+- 2019.03 - 2025.08 \| **고려대학교 바이오의공학부**
 
 ### 수상
-- 2025.10 | **우수포스터상** @2025년 대한의용생체공학회 추계학술대회 <br>
+- 2025.10 \| **우수포스터상** @2025년 대한의용생체공학회 추계학술대회 <br>
   - _“LLM 기반 임상화학검사 결과보고서 자동 생성” (2025.11.06-08, 인제대학교)_ 
-- 2023.06 | **아카데미 특별상** @고려대학교 지능정보SW 아카데미 
-- 2023.05 | **아이디어 경진대회 장려상** @한국경제신문 
+- 2023.06 \| **아카데미 특별상** @고려대학교 지능정보SW 아카데미 
+- 2023.05 \| **아이디어 경진대회 장려상** @한국경제신문 
 
 ### 자격증
-- 2025.06.13 | **데이터분석준전문가**
-- 2024.12.13 | **SQL개발자**
+- 2025.06.13 \| **데이터분석준전문가**
+- 2024.12.13 \| **SQL개발자**
 
 <br>
 
-## 완독/완강 챌린지
+## **📚&#xFE0F; 완독/완강 챌린지**
 
 ### Mathematics
 - [ ] **누구나 파이썬 통계분석** 타니아이 히로키
