@@ -68,6 +68,13 @@ order: 4
 - [ ] **이것이 코딩테스트다 with 파이썬** 나동빈
 - [ ] **Fluent Python** Luciano Ramalho
 
+### Data Analysis
+- [ ] **Python for Data Analysis** Wes McKinney
+- [ ] **SQL for Data Analysis** Udacity
+
+### Machine Learning
+- [ ] **파이썬 머신러닝 완벽 가이드** 권철민
+
 ### Deep Learning
 - [ ] **Understanding Deep Learning** Simon J.D. Prince
 - [ ] **Deep Learning from Scratch 1** Saito Goki
@@ -75,6 +82,12 @@ order: 4
 ### LLM & Agent
 - [ ] **Build a Large Language Model (From Scratch)** Sebastian Raschka
 - [ ] **요즘 AI 에이전트 개발** 박승규
+
+### Backend
+- [ ] **Node.js로 서버 만들기** 박민경
+
+### MLOps
+- [ ] FastAPI, Docker, Kubernetes, MLflow ...
 
 ### Papers to Read
 - [ ] **정리 중...**
