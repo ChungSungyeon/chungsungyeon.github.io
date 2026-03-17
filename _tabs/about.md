@@ -4,13 +4,18 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-## 정성연 Chung Sungyeon
-
+![profile](../assets/img/profile/profile_about.png){: width="30%" height="auto" align="left"}
+<center>
+<span style="font-size:170%;font-weight:bold;">
+<br/>정성연 Chung Sungyeon</span>
+<span>
 📧 sungyeon.ch8@gmail.com <br>
 💗 Español, Drum, Snowboarding
+</span>
+</center>
 
-<div style="clear: both;"></div>
-
+<br>
+<br>
 <br>
 
 ## 기술 스택
