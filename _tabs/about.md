@@ -17,7 +17,7 @@ order: 4
       📧 sungyeon.ch8@gmail.com
     </span>
     <span>
-      📍 Seoul, Korea
+      🏠 Seoul, Korea
     </span>
     <span>
       💗 Español, Drum, Snowboarding
