@@ -3,19 +3,10 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-<div style="display: flex; gap: 50px; align-items: center; justify-content: center; margin-bottom: 20px;">
-
-<span>
-  📧 sungyeon.ch8@gmail.com
-</span>
-<span>
-  🏠 Seoul, Korea
-</span>
-<span>
-  💗 Español, Drum, Snowboarding
-</span>
-
-</div>
+## About
+📧 sungyeon.ch8@gmail.com  
+🏠 Seoul, Korea  
+💗 Español, Drum, Snowboarding
 
 <br>
 
