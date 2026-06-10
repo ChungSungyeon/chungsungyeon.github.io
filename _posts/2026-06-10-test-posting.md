@@ -2,7 +2,6 @@
 title: test posting
 description: >-
   test posting to check if everything's alright
-author: sungyeon
 date: 2026-06-10 14:19:00 +0900
 categories: [Main, Sub]
 tags: [tag]
@@ -10,8 +9,6 @@ tags: [tag]
 
 This is a test posting to check if everthing's alright.  
 In this blog, I'll try to post some useful knowledge and tutorials.  
-
-<br>
 
 ### Fianancial Engineering
 In this category, I'm going to write about derivatives, pricing, greeks, etc.  
