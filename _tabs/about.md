@@ -10,6 +10,12 @@ order: 4
 
 <br>
 
+> **Now**  
+투자권유자문인력 자격증 3종 도전 중... (~2026.12)
+{: .prompt-tip }
+
+<br>
+
 ## **🛠&#xFE0F; 기술 스택**
 
 * **Languages:** Python
