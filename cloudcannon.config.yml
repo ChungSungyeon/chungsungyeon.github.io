@@ -80,3 +80,12 @@ collections_config:
     path: _data/origin
     icon: trip_origin
     disable_url: true
+
+markdown:
+  engine: kramdown
+  options:
+    attributes: true
+
+editor:
+  styles:
+    - assets/css/jekyll-theme-chirpy.scss
