@@ -86,7 +86,7 @@ editor:
     - assets/css/jekyll-theme-chirpy.css
 
 _editables:
-  content:
+  text:
     styles:
       - name: Info Box
         classes: prompt-info
