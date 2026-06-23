@@ -81,11 +81,22 @@ collections_config:
     icon: trip_origin
     disable_url: true
 
-markdown:
-  engine: kramdown
-  options:
-    attributes: true
-
 editor:
   styles:
-    - assets/css/jekyll-theme-chirpy.scss
+    - assets/css/jekyll-theme-chirpy.css
+
+_editables:
+  content:
+    styles:
+      - name: Info Box
+        classes: prompt-info
+        selector: blockquote
+      - name: Tip Box
+        classes: prompt-tip
+        selector: blockquote
+      - name: Warning Box
+        classes: prompt-warning
+        selector: blockquote
+      - name: Danger Box
+        classes: prompt-danger
+        selector: blockquote
