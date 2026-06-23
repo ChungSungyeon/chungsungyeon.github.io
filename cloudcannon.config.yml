@@ -89,14 +89,14 @@ _editables:
   text:
     styles:
       - name: Info Box
-        classes: prompt-info
+        class: prompt-info
         selector: blockquote
       - name: Tip Box
-        classes: prompt-tip
+        class: prompt-tip
         selector: blockquote
       - name: Warning Box
-        classes: prompt-warning
+        class: prompt-warning
         selector: blockquote
       - name: Danger Box
-        classes: prompt-danger
+        class: prompt-danger
         selector: blockquote
