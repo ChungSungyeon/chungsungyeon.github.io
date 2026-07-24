@@ -6,7 +6,7 @@ order: 4
 
 📧 sungyeon.ch8@gmail.com  
 🏠 Seoul, Korea  
-💗 Español, Drum, Snowboarding
+💗 Drum, Español, Snowboarding
 
 <br>
 
@@ -19,7 +19,7 @@ order: 4
 ## **🛠&#xFE0F; 기술 스택**
 
 * **Languages:** Python
-* **AI & LLM:** Ollama, LangChain, LangGraph, HuggingFace
+* **AI & LLM:** Ollama, HuggingFace
 * **DB & Infra:** PostgreSQL, Docker, Streamlit, Gitea, Github Actions
 
 <br>
