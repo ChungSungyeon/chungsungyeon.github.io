@@ -4,13 +4,13 @@
 </h1>
 
 <p align="center">
-  공대생의 증권사 생존기 렛츠고 <br>
-</p>
-
-<p align="center">
   <a href="https://chungsungyeon.github.io"><img src="https://img.shields.io/badge/Blog-chungsungyeon.github.io-12100E?style=flat-square&logo=Github" alt="Blog"></a>
   <a href="https://github.com/ChungSungyeon"><img src="https://img.shields.io/badge/GitHub-ChungSungyeon-181717?style=flat-square&logo=GitHub" alt="GitHub"></a>
   <a href="mailto:sungyeon.ch8@gmail.com"><img src="https://img.shields.io/badge/Email-sungyeon.ch8@gmail.com-D14836?style=flat-square&logo=Gmail&logoColor=white" alt="Email"></a>
+</p>
+
+<p align="center">
+  공대생의 증권사 생존기 렛츠고 <br>
 </p>
 
 &nbsp;
