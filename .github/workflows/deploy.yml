@@ -29,11 +29,11 @@ jobs:
     steps:
       # 1.1 소스 코드 가져오기
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # 1.2 Node.js 설치 (Chirpy 테마 에셋 빌드에 필요)
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "18" # Node.js LTS 버전
 
@@ -56,7 +56,7 @@ jobs:
 
       # 1.6 빌드 결과물(Artifact) 업로드
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: './_site' # Jekyll 빌드 결과물이 저장되는 기본 폴더
 
