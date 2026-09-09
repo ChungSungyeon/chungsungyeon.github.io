@@ -18,16 +18,16 @@ order: 4
 
 ## **🛠&#xFE0F; 기술 스택**
 
-* **Languages:** Python
-* **AI & LLM:** Ollama, HuggingFace
-* **DB & Infra:** PostgreSQL, Docker, Streamlit, Gitea, Github Actions
+* **Languages:** Python, C++
+* **AI & LLM:** Ollama, HuggingFace, llama.cpp, Streamlit
+* **DB & Infra:** PostgreSQL, Docker, Gitea, Github Actions
 
 <br>
 
 ## **📽&#xFE0F; 이력**
 
 ### 경력 및 학력
-- 2026.05 - 현재 퀀트 개발자로 근무 중
+- 2026.05 - 현재 퀀트팀에서 LLM 기반 내부 서비스 개발 업무 중
 - 2025.08 - 2026.03 \| **아산생명과학연구원** 인공지능 연구원
 - 2019.03 - 2025.08 \| **고려대학교 바이오의공학부** B.Eng
 

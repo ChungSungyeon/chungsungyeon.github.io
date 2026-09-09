@@ -17,7 +17,7 @@
 
 ## About
 
-증권사 퀀트부서에서 시스템 개발을 담당하며 공부한 내용을 정리하는 블로그입니다. <br>
+증권사 퀀트부서에서 사내 서비스 개발을 담당하며 공부한 내용을 정리하는 블로그입니다. <br>
 수학·금융공학 이론을 코드로 구현하고, 공부 과정을 기록합니다.
 
 &nbsp;
@@ -30,7 +30,7 @@
 
 &nbsp;
 
-## Tech Stack
+## Blog Tech Stack
 
 * **Framework:** [Jekyll](https://jekyllrb.com/)
 * **Theme:** [Chirpy Jekyll Theme](https://github.com/cotes2020/jekyll-theme-chirpy)
