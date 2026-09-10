@@ -42,9 +42,18 @@ REPO = HERE.parent.parent  # tools/editor/app.py -> repo root
 
 POSTS_DIR = REPO / "_posts"
 DRAFTS_DIR = REPO / "_drafts"
-IMG_ROOT = REPO / "assets" / "img" / "posts"
-FILE_ROOT = REPO / "assets" / "files"
 SITE_DIR = REPO / "_site"
+
+# ── 자산 폴더 위치 ────────────────────────────────────────────────
+# 포스트별 폴더가 바로 이 아래에 생긴다.
+#   IMG_ROOT  / <post_id> / 그림.png
+#   FILE_ROOT / <post_id> / 첨부.pdf
+# 위치를 바꾸고 싶으면 이 두 줄만 고치면 된다. URL 도 자동으로 따라간다.
+IMG_ROOT = REPO / "assets" / "img"
+FILE_ROOT = REPO / "assets" / "files"
+
+IMG_URL = "/" + IMG_ROOT.relative_to(REPO).as_posix() + "/"    # "/assets/img/"
+FILE_URL = "/" + FILE_ROOT.relative_to(REPO).as_posix() + "/"  # "/assets/files/"
 
 JEKYLL_PORT = int(os.environ.get("JEKYLL_PORT", "4000"))
 APP_PORT = int(os.environ.get("EDITOR_PORT", "5000"))
@@ -269,6 +278,8 @@ def api_config():
         "title": cfg.get("title", ""),
         "jekyll_port": JEKYLL_PORT,
         "jekyll_running": jekyll.is_running(),
+        "img_url": IMG_URL,
+        "file_url": FILE_URL,
     }
 
 
@@ -342,7 +353,7 @@ async def api_create_post(req: Request):
         "date": f"{dstr} {time_part} +0900",
         "categories": d.get("categories") or [],
         "tags": d.get("tags") or [],
-        "media_subpath": f"/assets/img/posts/{post_id}/",
+        "media_subpath": f"{IMG_URL}{post_id}/",
         "toc": True,
     }
     for flag in ("pin", "math", "mermaid"):
@@ -436,10 +447,10 @@ async def api_publish(req: Request):
             if src.exists() and not dst.exists():
                 src.rename(dst)
                 renamed.append(f"{src.name} → {dst.name}")
-        body = body.replace(f"/assets/files/{old_id}/", f"/assets/files/{new_id}/")
-        body = body.replace(f"/assets/img/posts/{old_id}/", f"/assets/img/posts/{new_id}/")
+        body = body.replace(f"{FILE_URL}{old_id}/", f"{FILE_URL}{new_id}/")
+        body = body.replace(f"{IMG_URL}{old_id}/", f"{IMG_URL}{new_id}/")
 
-    fm["media_subpath"] = f"/assets/img/posts/{new_id}/"
+    fm["media_subpath"] = f"{IMG_URL}{new_id}/"
     time_part = (d.get("time") or "09:00:00").strip()
     fm["date"] = f"{dstr} {time_part} +0900"
 
@@ -527,9 +538,9 @@ async def api_upload(
     if kind == "img":
         # media_subpath 덕분에 파일명만 쓰면 됨
         markdown = f'![{Path(orig_name).stem}]({dest.name}){{: w="800" }}\n_설명_'
-        url = f"/assets/img/posts/{post_id}/{dest.name}"
+        url = f"{IMG_URL}{post_id}/{dest.name}"
     else:
-        url = f"/assets/files/{post_id}/{dest.name}"
+        url = f"{FILE_URL}{post_id}/{dest.name}"
         markdown = f'<a href="{url}" download>{orig_name}</a>'
 
     return {
@@ -566,6 +577,12 @@ def api_assets(path: str):
         for m in pat.finditer(body):
             referenced.add(Path(m.group(1).split("?")[0].split("#")[0]).name)
 
+    def is_used(name: str) -> bool:
+        # 마크다운/HTML 참조로 잡히거나,
+        # 파일명이 문서 어디에든 그냥 나오면 (front matter의 image: path: 등) 사용 중으로 본다.
+        # 지우는 기능이므로 애매하면 "사용 중" 쪽으로 판단한다.
+        return name in referenced or name in body
+
     out = []
     for kind, folder in (("img", IMG_ROOT / pid), ("file", FILE_ROOT / pid)):
         if not folder.exists():
@@ -578,7 +595,7 @@ def api_assets(path: str):
                         "name": f.name,
                         "rel": str(f.relative_to(REPO)).replace("\\", "/"),
                         "bytes": f.stat().st_size,
-                        "used": f.name in referenced,
+                        "used": is_used(f.name),
                     }
                 )
     return {"post_id": pid, "assets": out, "orphans": sum(1 for a in out if not a["used"])}
@@ -587,11 +604,18 @@ def api_assets(path: str):
 @app.post("/api/assets/delete")
 async def api_assets_delete(req: Request):
     d = await req.json()
+    post_id = (d.get("post_id") or "").strip()
+    if not re.fullmatch(r"[\w.\-]+", post_id):
+        raise HTTPException(400, "post_id 가 필요합니다")
+
+    # 이 포스트의 자산 폴더 두 개 안에 있는 파일만 지울 수 있다.
+    # (IMG_ROOT 바로 밑의 favicons/, profile/ 같은 공용 자산은 건드리지 못한다)
+    allowed = {(IMG_ROOT / post_id).resolve(), (FILE_ROOT / post_id).resolve()}
+
     removed, skipped = [], []
     for rel in d.get("files", []):
         f = (REPO / rel).resolve()
-        ok = str(f).startswith(str(IMG_ROOT)) or str(f).startswith(str(FILE_ROOT))
-        if ok and f.is_file():
+        if f.parent in allowed and f.is_file():
             f.unlink()
             removed.append(rel)
         else:
@@ -682,13 +706,19 @@ class Jekyll:
             "bundle", "exec", "jekyll", "serve",
             "--host", "127.0.0.1",
             "--port", str(JEKYLL_PORT),
-            "--incremental",
             "--drafts",
             "--unpublished",
             "--future",
             "--watch",
             "--trace",
         ]
+        # --incremental 은 기본으로 쓰지 않는다.
+        # 바뀐 파일만 다시 만들기 때문에 home/tags/categories 같은 목록 페이지가
+        # 갱신되지 않는다. 글을 지우면 목록엔 남아있는데 눌러보면 404 가 나고,
+        # 새 글은 본문 페이지만 생기고 목록엔 안 뜨는 문제가 생긴다.
+        # 사이트가 커져서 빌드가 느려지면 JEKYLL_INCREMENTAL=1 로 켤 수 있다.
+        if os.environ.get("JEKYLL_INCREMENTAL") == "1":
+            cmd.insert(4, "--incremental")
         self.log = [f"$ {' '.join(cmd)}"]
         try:
             self.proc = subprocess.Popen(
@@ -764,6 +794,30 @@ def api_jekyll_start():
 @app.post("/api/jekyll/stop")
 def api_jekyll_stop():
     return jekyll.stop()
+
+
+@app.post("/api/jekyll/reset")
+def api_jekyll_reset():
+    """
+    빌드 캐시를 비우고 Jekyll 을 다시 시작한다.
+    목록 페이지가 실제와 안 맞을 때 (지운 글이 남아있거나, 새 글이 안 보일 때) 쓴다.
+    """
+    was_running = jekyll.is_running()
+    jekyll.stop()
+    removed = []
+    for name in (".jekyll-cache", "_site", ".jekyll-metadata"):
+        t = REPO / name
+        try:
+            if t.is_dir():
+                shutil.rmtree(t)
+                removed.append(name + "/")
+            elif t.exists():
+                t.unlink()
+                removed.append(name)
+        except OSError as e:
+            return {"ok": False, "error": f"{name} 삭제 실패: {e}"}
+    r = jekyll.start() if was_running else {"ok": True, "restarted": False}
+    return {**r, "removed": removed, "restarted": was_running}
 
 
 @app.get("/api/build/wait")
@@ -848,7 +902,7 @@ async def proxy_to_jekyll(full_path: str, request: Request):
             "<div style='font:14px/1.7 system-ui;padding:32px;color:#555'>"
             "<b>Jekyll 서버가 아직 안 떠 있습니다.</b><br><br>"
             "상단 <b>Jekyll ▶ 시작</b> 버튼을 누르거나, 터미널에서 "
-            "<code>bundle exec jekyll serve --incremental --drafts</code> 를 실행하세요.<br>"
+            "<code>bundle exec jekyll serve --drafts --unpublished --future</code> 를 실행하세요.<br>"
             "첫 빌드는 20~40초 걸릴 수 있습니다.</div>",
             status_code=503,
         )

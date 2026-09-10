@@ -5,7 +5,7 @@ description: >-
 date: 2026-06-26 09:00:00 +0900
 categories: [4.회고, 자격증]
 tags: [회계관리2급]
-media_subpath: /assets/img/posts/2026-06-26-accounting-management-review/
+media_subpath: /assets/img/2026-06-26-accounting-management-review/
 toc: true
 ---
 

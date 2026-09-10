@@ -1,27 +1,23 @@
 {
   "name": "Jekyll",
   "image": "mcr.microsoft.com/devcontainers/jekyll:2-bullseye",
-  "onCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "onCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && sudo chown -R $(id -u):$(id -g) /usr/local/bundle",
+  "postCreateCommand": "bash .devcontainer/post-create.sh && curl -LsSf https://astral.sh/uv/install.sh | sh && rm -rf tools/editor/.venv && $HOME/.local/bin/uv venv --python 3.12 tools/editor/.venv && $HOME/.local/bin/uv pip install --python tools/editor/.venv/bin/python -r tools/editor/requirements.txt",
+  "forwardPorts": [5000],
   "customizations": {
     "vscode": {
       "settings": {
         "terminal.integrated.defaultProfile.linux": "zsh"
       },
       "extensions": [
-        // Liquid tags auto-complete
         "killalau.vscode-liquid-snippets",
-        // Liquid syntax highlighting and formatting
         "Shopify.theme-check-vscode",
-        // Shell
         "timonwong.shellcheck",
         "mkhl.shfmt",
-        // Common formatter
         "EditorConfig.EditorConfig",
         "esbenp.prettier-vscode",
         "stylelint.vscode-stylelint",
         "yzhang.markdown-all-in-one",
-        // Git
         "mhutchie.git-graph"
       ]
     }
