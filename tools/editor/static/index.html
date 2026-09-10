@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chirpy 포스트 편집기</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#fff; --line:#e2e5ea; --text:#1f2328; --dim:#6b7280;
+  --accent:#2f6feb; --accent-soft:#e8f0fe;
+  --tip:#0d9488; --info:#2563eb; --warn:#d97706; --danger:#dc2626;
+  --mono:ui-monospace,SFMono-Regular,"Cascadia Code",Consolas,"D2Coding","Malgun Gothic",monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+     background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
+
+/* ---------- 상단바 ---------- */
+header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);
+       border-bottom:1px solid var(--line);flex-wrap:wrap;flex:none}
+header .sp{flex:1}
+select,input,textarea,button{font:inherit;color:inherit}
+button{padding:6px 11px;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;white-space:nowrap}
+button:hover{background:#f0f2f5}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.08)}
+button.ghost{border-color:transparent;background:transparent}
+button:disabled{opacity:.45;cursor:not-allowed}
+#postSelect{max-width:340px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.dot{width:8px;height:8px;border-radius:50%;background:#cbd0d8;display:inline-block;margin-right:5px;vertical-align:1px}
+.dot.on{background:#16a34a} .dot.busy{background:#f59e0b}
+.badge{font-size:12px;color:var(--dim);padding:3px 8px;background:#f0f2f5;border-radius:20px}
+
+/* ---------- 본체 ---------- */
+main{flex:1;display:flex;min-height:0}
+#left{display:flex;flex-direction:column;min-width:340px;width:50%;background:var(--panel);border-right:1px solid var(--line)}
+#gutter{width:6px;cursor:col-resize;background:var(--line);flex:none}
+#gutter:hover{background:var(--accent)}
+#right{flex:1;display:flex;flex-direction:column;min-width:300px;background:#fff}
+
+/* front matter */
+#fmBox{border-bottom:1px solid var(--line);flex:none;max-height:34vh;overflow:auto}
+#fmHead{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;background:#fbfcfd;
+        position:sticky;top:0;border-bottom:1px solid var(--line);font-weight:600;font-size:13px}
+#fmBody{padding:10px 12px 12px;display:none;gap:8px 10px;grid-template-columns:1fr 1fr}
+#fmBox.open #fmBody{display:grid}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f.wide{grid-column:1/-1}
+.f label{font-size:12px;color:var(--dim);font-weight:600}
+.f input[type=text],.f input[type=date],.f input[type=time],.f textarea,.f select{
+  padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;width:100%}
+.f textarea{resize:vertical;min-height:38px;height:38px;font:inherit}
+.flags{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px}
+.flags label{display:flex;gap:5px;align-items:center;cursor:pointer;color:var(--text);font-weight:400}
+.chips{display:flex;flex-wrap:wrap;gap:5px;padding:5px;border:1px solid var(--line);border-radius:6px;background:#fff;min-height:34px}
+.chip{background:var(--accent-soft);color:#1a4fbf;border-radius:5px;padding:2px 6px;font-size:12px;display:flex;gap:5px;align-items:center}
+.chip b{cursor:pointer;font-weight:700;opacity:.6}
+.chip b:hover{opacity:1}
+.chips input{border:0;outline:0;flex:1;min-width:90px;padding:2px;background:transparent}
+.hint{font-size:11px;color:var(--dim)}
+.mono{font-family:var(--mono)}
+
+/* toolbar */
+#toolbar{display:flex;gap:5px;padding:7px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+         align-items:center;background:#fbfcfd;flex:none}
+#toolbar button{padding:5px 9px;font-size:13px}
+.pbtn{border-left-width:4px!important}
+.pbtn.tip{border-left-color:var(--tip)} .pbtn.info{border-left-color:var(--info)}
+.pbtn.warning{border-left-color:var(--warn)} .pbtn.danger{border-left-color:var(--danger)}
+.sep{width:1px;height:20px;background:var(--line);margin:0 3px}
+.tg{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--dim);cursor:pointer;user-select:none}
+
+/* editor */
+#edWrap{flex:1;display:flex;min-height:0;position:relative}
+#lines{padding:12px 6px 12px 10px;text-align:right;color:#b6bcc6;font:13px/1.62 var(--mono);
+       white-space:pre;background:#fbfcfd;border-right:1px solid var(--line);overflow:hidden;
+       user-select:none;flex:none;min-width:42px}
+#ed{flex:1;border:0;outline:0;resize:none;padding:12px 14px;font:13px/1.62 var(--mono);
+    tab-size:2;white-space:pre-wrap;overflow-wrap:break-word}
+#edWrap.drag::after{content:"여기에 놓으면 자동으로 폴더에 저장됩니다";position:absolute;inset:8px;
+    border:2px dashed var(--accent);border-radius:10px;background:rgba(47,111,235,.06);
+    display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:600;pointer-events:none}
+#statusbar{flex:none;padding:5px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--dim);
+    display:flex;gap:14px;background:#fbfcfd}
+
+/* preview */
+#pvHead{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line);
+        background:#fbfcfd;font-size:13px;flex:none}
+#pv{flex:1;border:0;width:100%;background:#fff}
+#pvNote{color:var(--dim);font-size:12px}
+
+/* modal */
+.mask{position:fixed;inset:0;background:rgba(15,20,28,.42);display:none;align-items:center;
+      justify-content:center;z-index:50;padding:20px}
+.mask.on{display:flex}
+.modal{background:#fff;border-radius:12px;max-width:820px;width:100%;max-height:88vh;overflow:auto;
+       box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal h3{margin:0;padding:14px 18px;border-bottom:1px solid var(--line);font-size:15px}
+.modal .body{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.modal .foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;
+             position:sticky;bottom:0;background:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>.f{flex:1;min-width:150px}
+
+/* table builder */
+#tbGrid{border-collapse:collapse;font-size:13px}
+#tbGrid td{padding:0;border:1px solid var(--line)}
+#tbGrid input{border:0;outline:0;padding:5px 7px;width:130px;background:transparent}
+#tbGrid td.hd{background:var(--accent-soft)}
+#tbGrid td.hd input{font-weight:700;color:#1a4fbf}
+pre.out{background:#f6f7f9;border:1px solid var(--line);border-radius:7px;padding:10px;
+        font:12px/1.55 var(--mono);white-space:pre-wrap;max-height:190px;overflow:auto;margin:0}
+
+/* asset list */
+table.assets{width:100%;border-collapse:collapse;font-size:13px}
+table.assets th,table.assets td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+table.assets tr.orphan{background:#fff7ed}
+.tagpill{font-size:11px;padding:1px 7px;border-radius:20px}
+.tagpill.used{background:#dcfce7;color:#166534}
+.tagpill.un{background:#fee2e2;color:#991b1b}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f2328;color:#fff;
+       padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:99;max-width:80vw}
+#toast.on{opacity:.95}
+</style>
+</head>
+<body>
+
+<header>
+  <strong style="font-size:14px">📝 Chirpy 편집기</strong>
+  <select id="postSelect"></select>
+  <button id="btnNew">＋ 새 글</button>
+  <button id="btnSave" class="primary">저장 <span class="hint" style="opacity:.75">⌘S</span></button>
+  <button id="btnPublish" title="_drafts → _posts 로 발행">발행</button>
+  <span class="sp"></span>
+  <span class="badge"><span id="jkDot" class="dot"></span><span id="jkTxt">Jekyll 중지됨</span></span>
+  <button id="btnJekyll">시작</button>
+  <button id="btnLog" class="ghost" title="Jekyll 로그">📄</button>
+  <div class="sep"></div>
+  <button id="btnAssets">🗂 자산 정리</button>
+  <button id="btnGit">⑂ Git</button>
+</header>
+
+<main>
+  <section id="left">
+    <div id="fmBox">
+      <div id="fmHead">▸ Front matter <span id="fmSummary" class="hint" style="font-weight:400"></span></div>
+      <div id="fmBody">
+        <div class="f wide"><label>title</label><input type="text" id="fmTitle"></div>
+        <div class="f wide"><label>description</label><textarea id="fmDesc"></textarea></div>
+        <div class="f"><label>날짜</label><input type="date" id="fmDate"></div>
+        <div class="f"><label>시각</label><input type="time" id="fmTime" step="1"></div>
+        <div class="f wide"><label>categories <span class="hint">(순서 = 계층. 예: 4.회고 → 자격증)</span></label>
+          <div class="chips" id="catChips"><input id="catInput" placeholder="입력 후 Enter" list="catList"></div>
+          <datalist id="catList"></datalist>
+        </div>
+        <div class="f wide"><label>tags</label>
+          <div class="chips" id="tagChips"><input id="tagInput" placeholder="입력 후 Enter" list="tagList"></div>
+          <datalist id="tagList"></datalist>
+        </div>
+        <div class="f"><label>대표 이미지 image.path</label><input type="text" id="fmImgPath" placeholder="파일명 또는 /assets/..."></div>
+        <div class="f"><label>image.alt</label><input type="text" id="fmImgAlt"></div>
+        <div class="f wide flags">
+          <label><input type="checkbox" id="fmToc"> toc</label>
+          <label><input type="checkbox" id="fmPin"> pin</label>
+          <label><input type="checkbox" id="fmMath"> math</label>
+          <label><input type="checkbox" id="fmMermaid"> mermaid</label>
+          <span class="hint mono" id="fmMedia"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="toolbar">
+      <button id="btnPlus" class="primary" title="커서 위치에 삽입">＋ 삽입</button>
+      <button data-ins="img">🖼</button>
+      <button data-ins="table">▦</button>
+      <button data-ins="file">📎</button>
+      <button data-ins="link">🔗</button>
+      <div class="sep"></div>
+      <button class="pbtn tip"     data-prompt="tip">tip</button>
+      <button class="pbtn info"    data-prompt="info">info</button>
+      <button class="pbtn warning" data-prompt="warning">warning</button>
+      <button class="pbtn danger"  data-prompt="danger">danger</button>
+      <div class="sep"></div>
+      <button data-wrap="**" title="굵게">B</button>
+      <button data-wrap="*" title="기울임"><i>I</i></button>
+      <button data-wrap="`" title="인라인 코드">&lt;/&gt;</button>
+      <button data-line="&nbsp;" title="빈 줄(여백) 삽입">␣</button>
+      <div class="sep"></div>
+      <label class="tg" title="엔터 = 줄 끝 스페이스 2칸 / 빈 줄에서는 &amp;nbsp;">
+        <input type="checkbox" id="autoBr" checked> 줄바꿈 자동
+      </label>
+    </div>
+
+    <div id="edWrap">
+      <div id="lines">1</div>
+      <textarea id="ed" spellcheck="false" placeholder="markdown 본문을 작성하세요…"></textarea>
+    </div>
+    <div id="statusbar">
+      <span id="stPath">파일 없음</span>
+      <span id="stSave"></span>
+      <span class="sp" style="flex:1"></span>
+      <span id="stPos">1:1</span>
+    </div>
+  </section>
+
+  <div id="gutter"></div>
+
+  <section id="right">
+    <div id="pvHead">
+      <button id="btnReload">↻ 새로고침</button>
+      <button id="btnOpen" class="ghost">↗ 새 탭</button>
+      <span id="pvNote"></span>
+    </div>
+    <iframe id="pv" src="about:blank"></iframe>
+  </section>
+</main>
+
+<!-- ══════════ 모달들 ══════════ -->
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ══════════════════ 공통 유틸 ══════════════════ */
+const $ = s => document.querySelector(s);
+const ed = $('#ed');
+let state = { path:null, post_id:null, slug:null, draft:false, dirty:false, fm:{} };
+let saveTimer = null, buildBusy = false;
+
+function toast(msg, ms=2400){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'), ms);
+}
+async function api(url, opt){
+  const r = await fetch(url, opt);
+  const txt = await r.text();
+  let j; try{ j = JSON.parse(txt); }catch{ j = {detail:txt}; }
+  if(!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function openModal(html){ $('#modal').innerHTML = html; $('#mask').classList.add('on'); }
+function closeModal(){ $('#mask').classList.remove('on'); $('#modal').innerHTML=''; }
+$('#mask').addEventListener('mousedown', e=>{ if(e.target.id==='mask') closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ══════════════════ 에디터 삽입 헬퍼 ══════════════════ */
+function insertAtCursor(text, selectOffset){
+  const s = ed.selectionStart, e = ed.selectionEnd;
+  ed.setRangeText(text, s, e, 'end');
+  if(selectOffset!=null){ ed.selectionStart = ed.selectionEnd = s + selectOffset; }
+  ed.focus(); markDirty();
+}
+/** 현재 줄이 비어있지 않으면 앞에 줄바꿈을 넣어 블록을 새 줄에서 시작 */
+function insertBlock(text){
+  const s = ed.selectionStart;
+  const before = ed.value.slice(0, s);
+  let prefix = '';
+  const lineStart = before.lastIndexOf('\n') + 1;
+  if(before.slice(lineStart).trim() !== '') prefix = '\n';
+  insertAtCursor(prefix + text + '\n');
+}
+function wrapSelection(mark){
+  const s=ed.selectionStart, e=ed.selectionEnd, sel=ed.value.slice(s,e);
+  ed.setRangeText(mark+sel+mark, s, e, 'end');
+  if(!sel) ed.selectionStart = ed.selectionEnd = s + mark.length;
+  ed.focus(); markDirty();
+}
+
+/* ══════════════════ ④ 줄바꿈 자동화 ══════════════════ */
+function inCodeFence(uptoCursor){
+  return (uptoCursor.match(/^```/gm) || []).length % 2 === 1;
+}
+ed.addEventListener('keydown', e=>{
+  if(e.key !== 'Enter') return;
+  if(e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;   // 원본 줄바꿈
+  if(!$('#autoBr').checked) return;
+  if(ed.selectionStart !== ed.selectionEnd) return;
+
+  const pos = ed.selectionStart;
+  const before = ed.value.slice(0, pos);
+  const lineStart = before.lastIndexOf('\n') + 1;
+  const line = before.slice(lineStart);
+  const rest = ed.value.slice(pos);
+  const restLine = (rest.split('\n')[0] || '');
+
+  if(inCodeFence(before)) return;                       // 코드블록 안
+  if(/^---\s*$/.test(line.trim())) return;              // front matter 구분선
+  if(/^\s*\|/.test(line)) return;                       // 표
+  if(/^\s*\{:/.test(line)) return;                      // {: .prompt-tip }
+  if(restLine.trim() !== '') return;                    // 줄 중간 → 기본 동작
+
+  const t = line.trim();
+
+  // (A) 빈 줄에서 Enter → 여백용 &nbsp; 블록
+  if(t === ''){
+    e.preventDefault();
+    insertAtCursor('\n&nbsp;\n\n');
+    return;
+  }
+  // (B) 인용/prompt 계속
+  if(/^\s*>/.test(line)){
+    e.preventDefault();
+    if(/^\s*>\s*$/.test(line)){       // 빈 인용 → 탈출
+      ed.setRangeText('', lineStart, pos, 'end');
+      insertAtCursor('\n');
+    } else {
+      insertAtCursor('\n> ');
+    }
+    return;
+  }
+  // (C) 리스트 계속
+  const li = line.match(/^(\s*)([-*+]|\d+\.)(\s+)(.*)$/);
+  if(li){
+    e.preventDefault();
+    if(li[4].trim() === ''){          // 빈 항목 → 리스트 탈출
+      ed.setRangeText('', lineStart, pos, 'end');
+      insertAtCursor('\n');
+      return;
+    }
+    const marker = /^\d+\.$/.test(li[2]) ? (parseInt(li[2])+1)+'.' : li[2];
+    const tail = line.endsWith('  ') ? '' : '  ';
+    insertAtCursor(tail + '\n' + li[1] + marker + li[3]);
+    return;
+  }
+  // (D) 헤딩 / 속성줄 / 캡션 / 이미지속성 → 스페이스 없이
+  if(/^\s*#{1,6}\s/.test(line) || /\}\s*$/.test(line) || /^_.*_$/.test(t)) return;
+
+  // (E) 일반 문단 → 줄 끝 스페이스 2칸 (soft break)
+  e.preventDefault();
+  insertAtCursor((line.endsWith('  ') ? '' : '  ') + '\n');
+});
+
+/* ══════════════════ 툴바 ══════════════════ */
+$('#toolbar').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.dataset.wrap) return wrapSelection(b.dataset.wrap);
+  if(b.dataset.line) return insertBlock(b.dataset.line);
+  if(b.dataset.prompt) return promptDialog(b.dataset.prompt);
+  if(b.dataset.ins) return openInsert(b.dataset.ins);
+});
+$('#btnPlus').onclick = ()=> openInsert(null);
+
+function openInsert(kind){
+  if(kind==='img')   return uploadDialog('img');
+  if(kind==='file')  return uploadDialog('file');
+  if(kind==='table') return tableDialog();
+  if(kind==='link')  return linkDialog();
+  openModal(`<h3>＋ 커서 위치에 삽입</h3><div class="body">
+    <div class="row">
+      <button style="flex:1;padding:18px" onclick="closeModal();uploadDialog('img')">🖼<br>이미지</button>
+      <button style="flex:1;padding:18px" onclick="closeModal();tableDialog()">▦<br>표</button>
+      <button style="flex:1;padding:18px" onclick="closeModal();uploadDialog('file')">📎<br>첨부파일</button>
+      <button style="flex:1;padding:18px" onclick="closeModal();linkDialog()">🔗<br>링크</button>
+    </div></div>`);
+}
+
+/* ══════════════════ ⑤ prompt 박스 ══════════════════ */
+const PROMPT_COLOR = {tip:'#0d9488',info:'#2563eb',warning:'#d97706',danger:'#dc2626'};
+const PROMPT_KO = {tip:'팁 (초록)',info:'정보 (파랑)',warning:'주의 (노랑)',danger:'경고 (빨강)'};
+function promptDialog(kind='tip'){
+  const sel = ed.value.slice(ed.selectionStart, ed.selectionEnd);
+  openModal(`<h3>prompt 박스 삽입</h3><div class="body">
+    <div class="f"><label>종류</label>
+      <div class="row" id="pKinds">${Object.keys(PROMPT_COLOR).map(k=>
+        `<button class="pbtn ${k}" data-k="${k}" style="flex:1${k===kind?';background:#eef2ff;font-weight:700':''}">${PROMPT_KO[k]}</button>`).join('')}</div>
+    </div>
+    <div class="f"><label>내용 <span class="hint">(여러 줄 가능 · 마크다운 그대로 사용 가능)</span></label>
+      <textarea id="pText" style="min-height:120px" placeholder="예)&#10;**3줄 요약**&#10;1. 첫째&#10;2. 둘째">${esc(sel)}</textarea></div>
+    <div class="f"><label>미리보기</label><pre class="out" id="pOut"></pre></div>
+  </div>
+  <div class="foot"><button onclick="closeModal()">취소</button>
+    <button class="primary" id="pOk">삽입</button></div>`);
+
+  let cur = kind;
+  const render = ()=>{
+    const lines = ($('#pText').value || '내용').split('\n').map(l=>'> '+l).join('\n');
+    $('#pOut').textContent = `${lines}\n{: .prompt-${cur} }`;
+    $('#pOut').style.borderLeft = `4px solid ${PROMPT_COLOR[cur]}`;
+  };
+  $('#pKinds').onclick = e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    cur=b.dataset.k;
+    [...$('#pKinds').children].forEach(x=>{x.style.background='';x.style.fontWeight='';});
+    b.style.background='#eef2ff'; b.style.fontWeight='700'; render();
+  };
+  $('#pText').oninput = render; render(); $('#pText').focus();
+  $('#pOk').onclick = ()=>{ insertBlock($('#pOut').textContent); closeModal(); };
+}
+
+/* ══════════════════ ③-1 이미지 / 첨부파일 업로드 ══════════════════ */
+function uploadDialog(kind){
+  if(!state.post_id) return toast('먼저 글을 선택하거나 새로 만드세요');
+  const isImg = kind==='img';
+  openModal(`<h3>${isImg?'🖼 이미지':'📎 첨부파일'} 추가
+      <span class="hint mono" style="font-weight:400">→ assets/${isImg?'img/posts':'files'}/${esc(state.post_id)}/</span></h3>
+    <div class="body">
+      <div id="dz" style="border:2px dashed var(--line);border-radius:10px;padding:26px;text-align:center;color:var(--dim);cursor:pointer">
+        여기로 드래그하거나 클릭해서 파일 선택 <span class="hint">(여러 개 가능)</span>
+      </div>
+      <input type="file" id="fi" multiple ${isImg?'accept="image/*"':''} style="display:none">
+      ${isImg?`<div class="row">
+        <div class="f"><label>표시 너비 w=</label><input type="text" id="uW" value="800"></div>
+        <div class="f"><label>업로드 시 최대 픽셀 폭</label><input type="text" id="uMax" value="1600"></div>
+        <div class="f" style="justify-content:flex-end"><label class="tg"><input type="checkbox" id="uWebp"> WebP로 변환</label></div>
+      </div>`:''}
+      <label class="tg"><input type="checkbox" id="uAscii"> 파일명을 영문(ASCII)으로 변환 <span class="hint">— 한글 파일명 URL 이슈 예방</span></label>
+      <div id="uLog" class="hint"></div>
+    </div>
+    <div class="foot"><button onclick="closeModal()">닫기</button></div>`);
+
+  const dz=$('#dz'), fi=$('#fi');
+  dz.onclick = ()=>fi.click();
+  dz.ondragover = e=>{e.preventDefault(); dz.style.borderColor='var(--accent)';};
+  dz.ondragleave = ()=>dz.style.borderColor='var(--line)';
+  dz.ondrop = e=>{e.preventDefault(); dz.style.borderColor='var(--line)'; doUpload([...e.dataTransfer.files], kind, true);};
+  fi.onchange = ()=>doUpload([...fi.files], kind, true);
+}
+
+async function doUpload(files, kind, fromModal){
+  if(!files.length) return;
+  if(!state.post_id) return toast('먼저 글을 선택하세요');
+  const w    = fromModal && $('#uW')    ? $('#uW').value    : '800';
+  const mx   = fromModal && $('#uMax')  ? $('#uMax').value  : '1600';
+  const webp = fromModal && $('#uWebp') ? $('#uWebp').checked : false;
+  const asc  = fromModal && $('#uAscii')? $('#uAscii').checked : false;
+  const log  = fromModal ? $('#uLog') : null;
+
+  for(const f of files){
+    const fd = new FormData();
+    fd.append('file', f);
+    fd.append('post_id', state.post_id);
+    fd.append('kind', kind || 'auto');
+    fd.append('ascii_name', asc);
+    fd.append('optimize', 'true');
+    fd.append('max_width', mx);
+    fd.append('to_webp', webp);
+    try{
+      if(log) log.innerHTML += `⏳ ${esc(f.name)}<br>`;
+      const r = await api('/api/upload', {method:'POST', body:fd});
+      let md = r.markdown;
+      if(r.kind==='img' && w && w!=='800') md = md.replace('w="800"', `w="${w}"`);
+      insertBlock(md);
+      if(log) log.innerHTML = log.innerHTML.replace(`⏳ ${esc(f.name)}<br>`,
+        `✅ <b>${esc(r.filename)}</b> ${r.note?`<span class="hint">${esc(r.note)}</span>`:''}<br>`);
+      else toast(`업로드: ${r.filename}${r.note?' · '+r.note:''}`);
+    }catch(err){
+      if(log) log.innerHTML += `❌ ${esc(f.name)} — ${esc(err.message)}<br>`;
+      else toast('업로드 실패: '+err.message, 4000);
+    }
+  }
+  scheduleSave();
+}
+
+/* 편집기에 바로 드래그&드롭 */
+const edWrap = $('#edWrap');
+['dragenter','dragover'].forEach(t=>edWrap.addEventListener(t, e=>{
+  if(!e.dataTransfer.types.includes('Files')) return;
+  e.preventDefault(); edWrap.classList.add('drag');
+}));
+['dragleave','drop'].forEach(t=>edWrap.addEventListener(t, e=>{
+  if(t==='dragleave' && e.relatedTarget && edWrap.contains(e.relatedTarget)) return;
+  edWrap.classList.remove('drag');
+}));
+edWrap.addEventListener('drop', e=>{
+  if(!e.dataTransfer.files.length) return;
+  e.preventDefault();
+  doUpload([...e.dataTransfer.files], 'auto', false);
+});
+
+/* ══════════════════ ③-2 표 만들기 ══════════════════ */
+function tableDialog(){
+  openModal(`<h3>▦ 표 만들기</h3><div class="body">
+    <div class="row">
+      <div class="f"><label>헤더 지정</label>
+        <select id="tbMode">
+          <option value="none">없음 — 구분선 없는 표 (지금 쓰시던 방식)</option>
+          <option value="col" selected>1열이 헤더 — HTML &lt;th scope="row"&gt;</option>
+          <option value="row">1행이 헤더 — 일반 마크다운 표</option>
+          <option value="both">1행 + 1열 모두 헤더</option>
+        </select>
+      </div>
+      <div class="f" style="max-width:160px"><label>정렬(마크다운만)</label>
+        <select id="tbAlign"><option value="">기본</option><option value="center">가운데</option><option value="right">오른쪽</option></select>
+      </div>
+    </div>
+    <div class="hint" id="tbHint"></div>
+    <div style="overflow:auto"><table id="tbGrid"></table></div>
+    <div class="row">
+      <button onclick="tbRow(1)">＋ 행</button><button onclick="tbRow(-1)">－ 행</button>
+      <button onclick="tbCol(1)">＋ 열</button><button onclick="tbCol(-1)">－ 열</button>
+      <span style="flex:1"></span>
+      <button onclick="tbPaste()">📋 엑셀/탭 붙여넣기</button>
+    </div>
+    <div class="f"><label>결과</label><pre class="out" id="tbOut"></pre></div>
+  </div>
+  <div class="foot"><button onclick="closeModal()">취소</button><button class="primary" id="tbOk">삽입</button></div>`);
+
+  window._tb = [['주최','삼일회계법인'],['응시자격','제한없음'],['시험시간','11:00 ~ 11:50']];
+  $('#tbMode').onchange = tbRender;
+  $('#tbAlign').onchange = tbRender;
+  $('#tbOk').onclick = ()=>{ insertBlock($('#tbOut').textContent); closeModal(); };
+  tbRender();
+}
+function tbRow(d){ const t=window._tb;
+  if(d>0) t.push(new Array(t[0].length).fill(''));
+  else if(t.length>1) t.pop();
+  tbRender(); }
+function tbCol(d){ const t=window._tb;
+  if(d>0) t.forEach(r=>r.push(''));
+  else if(t[0].length>1) t.forEach(r=>r.pop());
+  tbRender(); }
+function tbPaste(){
+  const s = prompt('엑셀에서 복사한 내용을 붙여넣으세요 (탭 구분)');
+  if(!s) return;
+  const rows = s.trim().split('\n').map(r=>r.split('\t'));
+  const w = Math.max(...rows.map(r=>r.length));
+  window._tb = rows.map(r=>{ while(r.length<w) r.push(''); return r; });
+  tbRender();
+}
+function tbRender(){
+  const t = window._tb, mode = $('#tbMode').value;
+  const hdRow = (mode==='row'||mode==='both'), hdCol = (mode==='col'||mode==='both');
+  $('#tbHint').textContent = hdCol
+    ? '※ 마크다운 표는 「행 헤더」만 지원해서, 1열 헤더는 HTML 표로 만듭니다. Chirpy 표 스타일 그대로 적용됩니다.'
+    : (mode==='none' ? '※ 구분선 없이 출력합니다. kramdown이 헤더 없는 표로 렌더링합니다.' : '');
+
+  $('#tbGrid').innerHTML = t.map((row,ri)=>'<tr>'+row.map((c,ci)=>{
+    const isHd = (hdRow&&ri===0)||(hdCol&&ci===0);
+    return `<td class="${isHd?'hd':''}"><input value="${esc(c)}" data-r="${ri}" data-c="${ci}"></td>`;
+  }).join('')+'</tr>').join('');
+  $('#tbGrid').oninput = e=>{
+    const i=e.target; window._tb[i.dataset.r][i.dataset.c]=i.value; tbOut();
+  };
+  tbOut();
+}
+function tbOut(){
+  const t = window._tb, mode = $('#tbMode').value, al = $('#tbAlign').value;
+  const hdRow=(mode==='row'||mode==='both'), hdCol=(mode==='col'||mode==='both');
+  let out;
+  if(hdCol){
+    // 1열 헤더 → HTML 표 (kramdown/Chirpy 모두 정상 렌더)
+    const cell = (c,tag,scope)=>`<${tag}${scope?` scope="${scope}"`:''}>${c||''}</${tag}>`;
+    const rows = t.map((row,ri)=>{
+      if(hdRow && ri===0) return '  <tr>'+row.map(c=>cell(c,'th','col')).join('')+'</tr>';
+      return '  <tr>'+row.map((c,ci)=> ci===0 ? cell(c,'th','row') : cell(c,'td')).join('')+'</tr>';
+    });
+    out = (hdRow
+      ? `<table>\n  <thead>\n${rows[0]}\n  </thead>\n  <tbody>\n${rows.slice(1).join('\n')}\n  </tbody>\n</table>`
+      : `<table>\n  <tbody>\n${rows.join('\n')}\n  </tbody>\n</table>`);
+  } else {
+    const line = r => '|' + r.map(c=>String(c||'').replace(/\|/g,'\\|')).join('|') + '|';
+    const sep = al==='center' ? ':---:' : al==='right' ? '---:' : '---';
+    out = t.map(line).join('\n');
+    if(hdRow){
+      const d = '|' + t[0].map(()=>sep).join('|') + '|';
+      out = [line(t[0]), d, ...t.slice(1).map(line)].join('\n');
+    }
+  }
+  $('#tbOut').textContent = out;
+}
+
+/* ══════════════════ ③-3 링크 ══════════════════ */
+function linkDialog(){
+  const sel = ed.value.slice(ed.selectionStart, ed.selectionEnd);
+  openModal(`<h3>🔗 링크 삽입</h3><div class="body">
+    <div class="f"><label>텍스트</label><input type="text" id="lkText" value="${esc(sel)}" placeholder="2015년 회계관리2급 50선 원출처 링크"></div>
+    <div class="f"><label>URL</label><input type="text" id="lkUrl" placeholder="https://..."></div>
+    <label class="tg"><input type="checkbox" id="lkBlank"> 새 창으로 열기 <span class="hint">({: target="_blank" } 추가)</span></label>
+    <div class="f"><label>결과</label><pre class="out" id="lkOut"></pre></div>
+  </div>
+  <div class="foot"><button onclick="closeModal()">취소</button><button class="primary" id="lkOk">삽입</button></div>`);
+
+  const render=()=>{
+    const t=$('#lkText').value||'링크', u=$('#lkUrl').value||'https://';
+    $('#lkOut').textContent = `[${t}](${u})` + ($('#lkBlank').checked ? '{: target="_blank" }' : '');
+  };
+  ['lkText','lkUrl','lkBlank'].forEach(id=>$('#'+id).oninput=render);
+  $('#lkBlank').onchange=render; render();
+  $('#lkOk').onclick=()=>{ insertAtCursor($('#lkOut').textContent); closeModal(); };
+  ($('#lkText').value ? $('#lkUrl') : $('#lkText')).focus();
+}
+
+/* ══════════════════ ① 새 글 (폴더 자동 생성) ══════════════════ */
+let TAX = {categories:[], tags:[], category_paths:[]};
+async function loadTaxonomy(){
+  TAX = await api('/api/taxonomy');
+  $('#catList').innerHTML = TAX.categories.map(([c,n])=>`<option value="${esc(c)}">${n}개</option>`).join('');
+  $('#tagList').innerHTML = TAX.tags.map(([c,n])=>`<option value="${esc(c)}">${n}개</option>`).join('');
+}
+function newPostDialog(){
+  const today = new Date().toISOString().slice(0,10);
+  openModal(`<h3>＋ 새 글 만들기</h3><div class="body">
+    <div class="row">
+      <div class="f"><label>날짜</label><input type="date" id="nDate" value="${today}"></div>
+      <div class="f"><label>시각</label><input type="time" id="nTime" value="09:00:00" step="1"></div>
+      <div class="f" style="flex:2"><label>slug <span class="hint">영문 소문자·숫자·하이픈</span></label>
+        <input type="text" id="nSlug" class="mono" placeholder="accounting-management-review"></div>
+    </div>
+    <div class="f"><label>title</label><input type="text" id="nTitle" placeholder="회계관리2급 취득 후기"></div>
+    <div class="f"><label>description</label><textarea id="nDesc"></textarea></div>
+    <div class="row">
+      <div class="f"><label>categories <span class="hint">쉼표로 계층</span></label>
+        <input type="text" id="nCat" list="catPathList" placeholder="4.회고, 자격증">
+        <datalist id="catPathList">${TAX.category_paths.map(([c])=>`<option value="${esc(c.replace(/ > /g,', '))}">`).join('')}</datalist></div>
+      <div class="f"><label>tags <span class="hint">쉼표 구분</span></label>
+        <input type="text" id="nTag" placeholder="회계관리2급"></div>
+    </div>
+    <label class="tg"><input type="checkbox" id="nDraft"> 초안(_drafts)으로 시작 <span class="hint">— 발행 버튼 누르기 전까지 공개 안 됨</span></label>
+    <div class="hint" id="nPreview" style="padding:10px;background:#f6f7f9;border-radius:7px"></div>
+  </div>
+  <div class="foot"><button onclick="closeModal()">취소</button><button class="primary" id="nOk">만들기</button></div>`);
+
+  const prev = ()=>{
+    const d=$('#nDate').value, s=$('#nSlug').value||'<slug>';
+    const id=`${d}-${s}`, dir=$('#nDraft').checked?'_drafts':'_posts';
+    $('#nPreview').innerHTML = `<b>자동 생성됩니다</b><br>
+      <span class="mono">${dir}/${esc(id)}.md</span><br>
+      <span class="mono">assets/img/posts/${esc(id)}/</span><br>
+      <span class="mono">assets/files/${esc(id)}/</span>`;
+  };
+  ['nDate','nSlug'].forEach(i=>$('#'+i).oninput=prev);
+  $('#nDraft').onchange=prev; prev();
+  $('#nSlug').focus();
+
+  $('#nOk').onclick = async ()=>{
+    const split = v => (v||'').split(',').map(x=>x.trim()).filter(Boolean);
+    try{
+      const r = await api('/api/posts', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          date:$('#nDate').value, time:$('#nTime').value||'09:00:00',
+          slug:$('#nSlug').value.trim(), title:$('#nTitle').value.trim(),
+          description:$('#nDesc').value.trim(),
+          categories:split($('#nCat').value), tags:split($('#nTag').value),
+          draft:$('#nDraft').checked
+        })});
+      closeModal();
+      toast('생성 완료 · 폴더 2개 자동 생성됨');
+      await loadPostList(r.path);
+    }catch(e){ toast(e.message, 5000); }
+  };
+}
+$('#btnNew').onclick = newPostDialog;
+
+/* ══════════════════ 포스트 목록 / 열기 / 저장 ══════════════════ */
+async function loadPostList(selectPath){
+  const {posts} = await api('/api/posts');
+  const sel = $('#postSelect');
+  sel.innerHTML = '<option value="">— 글 선택 —</option>' + posts.map(p=>
+    `<option value="${esc(p.path)}">${p.draft?'📄 [초안] ':'📌 '}${esc(p.title)}  ·  ${esc(p.date.slice(0,10))}</option>`).join('');
+  if(selectPath){ sel.value = selectPath; await openPost(selectPath); }
+}
+$('#postSelect').onchange = e => e.target.value ? openPost(e.target.value) : null;
+
+function chipsOf(id){ return [...$('#'+id).querySelectorAll('.chip')].map(c=>c.dataset.v); }
+function setChips(id, arr){
+  const box = $('#'+id), input = box.querySelector('input');
+  box.querySelectorAll('.chip').forEach(c=>c.remove());
+  (arr||[]).forEach(v=>{
+    const s=document.createElement('span'); s.className='chip'; s.dataset.v=v;
+    s.innerHTML = esc(v)+' <b>×</b>';
+    s.querySelector('b').onclick = ()=>{ s.remove(); markDirty(); };
+    box.insertBefore(s, input);
+  });
+}
+['catChips','tagChips'].forEach(id=>{
+  const box=$('#'+id), input=box.querySelector('input');
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===','){
+      e.preventDefault();
+      const v=input.value.trim(); if(!v) return;
+      setChips(id, [...chipsOf(id), v]); input.value=''; markDirty();
+    } else if(e.key==='Backspace' && !input.value){
+      const cs=chipsOf(id); cs.pop(); setChips(id, cs); markDirty();
+    }
+  });
+  box.onclick = e=>{ if(e.target===box) input.focus(); };
+});
+
+async function openPost(path){
+  const p = await api('/api/post?path='+encodeURIComponent(path));
+  state = {path:p.path, post_id:p.post_id, slug:p.slug, draft:p.draft, dirty:false, fm:p.frontmatter};
+  const fm = p.frontmatter;
+  $('#fmTitle').value = fm.title||'';
+  $('#fmDesc').value  = (fm.description||'').trim();
+  const dm = String(fm.date||'').match(/(\d{4}-\d{2}-\d{2})[ T]?(\d{2}:\d{2}:\d{2})?/);
+  $('#fmDate').value = dm?dm[1]:'';  $('#fmTime').value = dm&&dm[2]?dm[2]:'09:00:00';
+  setChips('catChips', Array.isArray(fm.categories)?fm.categories:(fm.categories?[fm.categories]:[]));
+  setChips('tagChips', Array.isArray(fm.tags)?fm.tags:(fm.tags?[fm.tags]:[]));
+  $('#fmImgPath').value = (fm.image&&fm.image.path)||'';
+  $('#fmImgAlt').value  = (fm.image&&fm.image.alt)||'';
+  $('#fmToc').checked = fm.toc!==false;
+  $('#fmPin').checked = !!fm.pin; $('#fmMath').checked=!!fm.math; $('#fmMermaid').checked=!!fm.mermaid;
+  $('#fmMedia').textContent = fm.media_subpath||'';
+  $('#fmSummary').textContent = ` — ${fm.title||p.post_id}`;
+
+  ed.value = p.body;
+  $('#stPath').textContent = p.path + (p.draft?'  (초안)':'');
+  $('#btnPublish').style.display = p.draft ? '' : 'none';
+  updateLines(); setSaveState('');
+  loadPreview();
+}
+
+function collectFM(){
+  const fm = {...state.fm};
+  fm.title = $('#fmTitle').value;
+  const d = $('#fmDesc').value.trim();
+  if(d) fm.description = d; else delete fm.description;
+  fm.date = `${$('#fmDate').value} ${$('#fmTime').value||'09:00:00'} +0900`;
+  fm.categories = chipsOf('catChips');
+  fm.tags = chipsOf('tagChips');
+  const ip=$('#fmImgPath').value.trim(), ia=$('#fmImgAlt').value.trim();
+  if(ip) fm.image = {path:ip, ...(ia?{alt:ia}:{})}; else delete fm.image;
+  fm.toc = $('#fmToc').checked;
+  ['pin','math','mermaid'].forEach(k=>{
+    if($('#fm'+k[0].toUpperCase()+k.slice(1)).checked) fm[k]=true; else delete fm[k];
+  });
+  if(state.post_id) fm.media_subpath = `/assets/img/posts/${state.post_id}/`;
+  return fm;
+}
+
+function setSaveState(t){ $('#stSave').textContent = t; }
+function markDirty(){ state.dirty = true; setSaveState('● 수정됨'); updateLines(); scheduleSave(); }
+ed.addEventListener('input', markDirty);
+$('#fmBody').addEventListener('input', markDirty);
+$('#fmBody').addEventListener('change', markDirty);
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>save(true), 900);
+}
+async function save(auto){
+  if(!state.path) return;
+  clearTimeout(saveTimer);
+  const fm = collectFM();
+  try{
+    setSaveState('저장 중…');
+    await api('/api/post', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({path:state.path, frontmatter:fm, body:ed.value})});
+    state.fm = fm; state.dirty = false;
+    setSaveState('✓ 저장됨 ' + new Date().toLocaleTimeString('ko-KR'));
+    $('#fmSummary').textContent = ' — ' + fm.title;
+    refreshPreview();
+    if(!auto) loadTaxonomy();
+  }catch(e){ setSaveState('✗ ' + e.message); toast('저장 실패: '+e.message, 5000); }
+}
+$('#btnSave').onclick = ()=>save(false);
+document.addEventListener('keydown', e=>{
+  if((e.metaKey||e.ctrlKey) && e.key==='s'){ e.preventDefault(); save(false); }
+});
+window.addEventListener('beforeunload', e=>{ if(state.dirty){ e.preventDefault(); e.returnValue=''; } });
+
+/* ══════════════════ ② 실제 Jekyll 서버 미리보기 ══════════════════ */
+function loadPreview(){
+  if(!state.slug) return;
+  $('#pv').src = `/posts/${state.slug}/`;
+  $('#pvNote').textContent = `/posts/${state.slug}/`;
+}
+async function refreshPreview(){
+  if(!state.slug || buildBusy) return;
+  buildBusy = true;
+  $('#pvNote').textContent = '⏳ Jekyll 재빌드 대기 중…';
+  try{
+    const {mtime} = await api(`/api/build/mtime?slug=${encodeURIComponent(state.slug)}`);
+    const r = await api(`/api/build/wait?slug=${encodeURIComponent(state.slug)}&since=${mtime}`);
+    if(r.ok){
+      reloadIframe();
+      $('#pvNote').textContent = `/posts/${state.slug}/ · ${new Date().toLocaleTimeString('ko-KR')} 갱신`;
+    }else{
+      $('#pvNote').innerHTML = '⚠️ 빌드 대기 시간 초과 — Jekyll 로그를 확인하세요';
+    }
+  }catch(e){ $('#pvNote').textContent = '⚠️ ' + e.message; }
+  finally{ buildBusy = false; }
+}
+function reloadIframe(){
+  const f = $('#pv');
+  let y = 0;
+  try{ y = f.contentWindow.scrollY || 0; }catch{}
+  f.onload = ()=>{ try{ f.contentWindow.scrollTo(0, y); }catch{} f.onload=null; };
+  f.contentWindow.location.reload();
+}
+$('#btnReload').onclick = ()=>{ if(state.slug){ $('#pv').src = `/posts/${state.slug}/`; } };
+$('#btnOpen').onclick = ()=>{ if(state.slug) window.open(`/posts/${state.slug}/`, '_blank'); };
+
+/* Jekyll 프로세스 제어 */
+async function pollJekyll(){
+  try{
+    const s = await api('/api/jekyll/status');
+    const on = s.reachable;
+    $('#jkDot').className = 'dot ' + (on?'on':(s.running?'busy':''));
+    $('#jkTxt').textContent = on ? `Jekyll :${s.port}` : (s.running?'빌드 중…':'Jekyll 중지됨');
+    $('#btnJekyll').textContent = s.running ? '정지' : '시작';
+    window._jkLog = s.log;
+  }catch{}
+}
+$('#btnJekyll').onclick = async ()=>{
+  const running = $('#btnJekyll').textContent === '정지';
+  $('#btnJekyll').disabled = true;
+  try{
+    const r = await api('/api/jekyll/' + (running?'stop':'start'), {method:'POST'});
+    if(r.error) toast(r.error, 6000);
+    else if(!running) toast('Jekyll 시작 — 첫 빌드는 20~40초 걸립니다');
+  }catch(e){ toast(e.message, 5000); }
+  $('#btnJekyll').disabled = false; pollJekyll();
+};
+$('#btnLog').onclick = ()=>{
+  openModal(`<h3>Jekyll 로그</h3><div class="body">
+    <pre class="out" style="max-height:60vh">${esc((window._jkLog||['(없음)']).join('\n'))}</pre></div>
+    <div class="foot"><button onclick="closeModal()">닫기</button></div>`);
+};
+setInterval(pollJekyll, 3000);
+
+/* ══════════════════ 발행 ══════════════════ */
+$('#btnPublish').onclick = async ()=>{
+  if(!state.draft) return;
+  const today = new Date().toISOString().slice(0,10);
+  openModal(`<h3>발행하기</h3><div class="body">
+    <div class="hint">_drafts 에서 _posts 로 옮깁니다. 날짜가 바뀌면 assets 폴더 이름과 본문 경로도 함께 수정됩니다.</div>
+    <div class="row">
+      <div class="f"><label>발행 날짜</label><input type="date" id="pubDate" value="${today}"></div>
+      <div class="f"><label>시각</label><input type="time" id="pubTime" value="09:00:00" step="1"></div>
+    </div></div>
+    <div class="foot"><button onclick="closeModal()">취소</button><button class="primary" id="pubOk">발행</button></div>`);
+  $('#pubOk').onclick = async ()=>{
+    try{
+      await save(true);
+      const r = await api('/api/post/publish', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({path:state.path, date:$('#pubDate').value, time:$('#pubTime').value})});
+      closeModal();
+      toast('발행 완료' + (r.renamed.length?` · 폴더 이름 변경: ${r.renamed.join(', ')}`:''), 4500);
+      await loadPostList(r.path);
+    }catch(e){ toast(e.message, 5000); }
+  };
+};
+
+/* ══════════════════ 자산 정리 ══════════════════ */
+$('#btnAssets').onclick = async ()=>{
+  if(!state.path) return toast('먼저 글을 선택하세요');
+  await save(true);
+  const r = await api('/api/assets?path='+encodeURIComponent(state.path));
+  const kb = b => b>1048576 ? (b/1048576).toFixed(1)+'MB' : Math.round(b/1024)+'KB';
+  openModal(`<h3>🗂 자산 정리 <span class="hint mono" style="font-weight:400">${esc(r.post_id)}</span></h3>
+  <div class="body">
+    <div class="hint">본문에서 참조하지 않는 파일이 <b>${r.orphans}개</b> 있습니다. 체크한 파일을 삭제합니다.</div>
+    <table class="assets"><thead><tr>
+      <th style="width:28px"><input type="checkbox" id="asAll"></th><th>파일</th><th>위치</th><th>크기</th><th>사용</th>
+    </tr></thead><tbody>
+    ${r.assets.map(a=>`<tr class="${a.used?'':'orphan'}">
+      <td><input type="checkbox" class="asCk" value="${esc(a.rel)}" ${a.used?'':'checked'}></td>
+      <td class="mono">${esc(a.name)}</td>
+      <td class="hint">${a.kind==='img'?'assets/img/posts/':'assets/files/'}</td>
+      <td>${kb(a.bytes)}</td>
+      <td><span class="tagpill ${a.used?'used':'un'}">${a.used?'사용중':'미사용'}</span></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="hint">파일이 없습니다</td></tr>'}
+    </tbody></table>
+  </div>
+  <div class="foot"><button onclick="closeModal()">닫기</button>
+    <button class="primary" id="asDel" style="background:var(--danger);border-color:var(--danger)">선택 삭제</button></div>`);
+
+  $('#asAll').onchange = e => document.querySelectorAll('.asCk').forEach(c=>c.checked=e.target.checked);
+  $('#asDel').onclick = async ()=>{
+    const files = [...document.querySelectorAll('.asCk:checked')].map(c=>c.value);
+    if(!files.length) return toast('선택된 파일이 없습니다');
+    if(!confirm(`${files.length}개 파일을 삭제합니다. 되돌릴 수 없습니다.`)) return;
+    const d = await api('/api/assets/delete', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({files})});
+    closeModal(); toast(`${d.removed.length}개 삭제됨`);
+  };
+};
+
+/* ══════════════════ Git ══════════════════ */
+$('#btnGit').onclick = async ()=>{
+  if(state.dirty) await save(true);
+  const g = await api('/api/git/status');
+  if(!g.ok) return toast('Git 오류: '+g.error, 5000);
+  const title = $('#fmTitle').value || state.post_id || '';
+  openModal(`<h3>⑂ Git — <span class="mono" style="font-weight:400">${esc(g.branch)}</span>
+      <span class="hint" style="font-weight:400">· push 대기 ${esc(g.ahead)}개</span></h3>
+  <div class="body">
+    <div class="f"><label>변경된 파일 ${g.files.length}개</label>
+      <pre class="out">${g.files.map(f=>`${f.status.padEnd(3)} ${f.file}`).join('\n')||'(변경 없음)'}</pre></div>
+    <div class="f"><label>커밋 메시지</label>
+      <input type="text" id="gMsg" value="${esc(title? 'post: '+title : 'update')}"></div>
+    <label class="tg"><input type="checkbox" id="gPush" checked> 커밋 후 바로 push (GitHub Pages 배포)</label>
+    <div id="gOut" class="hint"></div>
+  </div>
+  <div class="foot"><button onclick="closeModal()">닫기</button>
+    <button id="gOnlyPush">push만</button>
+    <button class="primary" id="gOk">커밋</button></div>`);
+
+  $('#gOk').onclick = async ()=>{
+    $('#gOk').disabled = true; $('#gOut').textContent = '실행 중…';
+    try{
+      const r = await api('/api/git/commit', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({message:$('#gMsg').value, push:$('#gPush').checked})});
+      $('#gOut').innerHTML = `<pre class="out">${esc(r.output)}\n${esc(r.push_output||r.push_error||'')}</pre>`;
+      toast(r.pushed ? '커밋 + push 완료 — 잠시 후 배포됩니다' : '커밋 완료' + (r.push_error?' (push 실패)':''), 4500);
+    }catch(e){ $('#gOut').textContent = '✗ '+e.message; }
+    $('#gOk').disabled = false;
+  };
+  $('#gOnlyPush').onclick = async ()=>{
+    const r = await api('/api/git/push', {method:'POST'});
+    $('#gOut').innerHTML = `<pre class="out">${esc(r.output||r.error)}</pre>`;
+  };
+};
+
+/* ══════════════════ 잡다한 UI ══════════════════ */
+$('#fmHead').onclick = ()=>{
+  const b=$('#fmBox'); b.classList.toggle('open');
+  $('#fmHead').firstChild.nodeValue = (b.classList.contains('open')?'▾':'▸') + ' Front matter ';
+};
+function updateLines(){
+  const n = ed.value.split('\n').length;
+  const g = $('#lines');
+  if(g.dataset.n != n){ g.dataset.n = n; g.textContent = Array.from({length:n},(_,i)=>i+1).join('\n'); }
+  g.scrollTop = ed.scrollTop;
+}
+ed.addEventListener('scroll', ()=>{ $('#lines').scrollTop = ed.scrollTop; });
+function updatePos(){
+  const p = ed.value.slice(0, ed.selectionStart).split('\n');
+  $('#stPos').textContent = `${p.length}:${p[p.length-1].length+1}`;
+}
+['click','keyup','input'].forEach(t=>ed.addEventListener(t, updatePos));
+
+/* 좌우 분할 드래그 */
+(()=>{ let drag=false;
+  $('#gutter').addEventListener('mousedown', ()=>{drag=true; document.body.style.userSelect='none';});
+  window.addEventListener('mousemove', e=>{
+    if(!drag) return;
+    const w = Math.min(Math.max(e.clientX, 340), window.innerWidth-320);
+    $('#left').style.width = w+'px';
+  });
+  window.addEventListener('mouseup', ()=>{drag=false; document.body.style.userSelect='';});
+})();
+
+/* 시작 */
+(async ()=>{
+  $('#fmBox').classList.add('open'); $('#fmHead').firstChild.nodeValue = '▾ Front matter ';
+  await loadTaxonomy();
+  await loadPostList();
+  pollJekyll();
+  updateLines();
+})();
+</script>
+</body>
+</html>
