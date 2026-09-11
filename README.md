@@ -38,4 +38,17 @@
 
 &nbsp;
 
+## Post Editor
+
+포스팅 과정을 줄이려고 만든 개인용 편집기가 [`tools/editor/`](tools/editor/) 에 있습니다.
+왼쪽에서 마크다운을 쓰면 오른쪽에 실제 Jekyll 빌드 결과가 뜹니다.
+
+* 글 생성 시 이미지·첨부파일 폴더 자동 생성
+* 이미지·표·링크·prompt 박스 삽입, Chirpy 줄바꿈 자동화
+* 초안 관리, 미사용 자산 정리, 커밋·푸시
+
+사용법은 [tools/editor/README.md](tools/editor/README.md) 참고
+
+&nbsp;
+
 <p align="center">© 2026 Sungyeon Chung. All rights reserved.</p>
